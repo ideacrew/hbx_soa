@@ -20,6 +20,7 @@ set :scm, :gitcopy
 # set :log_level, :debug
 set :bundle_binstubs, false
 set :bundle_flags, "--quiet"
+set :bundle_path, nil
 
 # Default value for :pty is false
 set :pty, true
@@ -28,7 +29,7 @@ set :pty, true
 set :linked_files, %w{config/exchange.yml}
 
 # Default value for linked_dirs is []
-# set :linked_dirs, %w{pids}
+set :linked_dirs, %w{pids}
 # set :linked_dirs, %w{bin log tmp/pids tmp/cache tmp/sockets vendor/bundle public/system}
 
 # Default value for default_env is {}
