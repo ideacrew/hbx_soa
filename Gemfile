@@ -31,3 +31,13 @@ gem 'bunny'
 # %w(core support gen helpers cache mailer admin).each do |g|
 #   gem 'padrino-' + g, '0.12.4'
 # end
+
+group :production do
+  gem 'unicorn'
+end
+
+group :development do
+  gem 'capistrano'
+  gem 'capistrano-scm-gitcopy'
+  gem 'capistrano-bundler'
+end
