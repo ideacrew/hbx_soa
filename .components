@@ -1,0 +1,9 @@
+---
+:orm: none
+:test: rspec
+:mock: none
+:script: none
+:renderer: haml
+:stylesheet: none
+:namespace: HbxSoa
+:migration_format: number
