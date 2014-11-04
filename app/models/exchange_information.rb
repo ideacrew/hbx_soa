@@ -9,6 +9,8 @@ class ExchangeInformation
   include Singleton
 
   REQUIRED_KEYS = [
+    'invalid_argument_queue',
+    'processing_failure_queue'
   ]
 
   attr_reader :config
