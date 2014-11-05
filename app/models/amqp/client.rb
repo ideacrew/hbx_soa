@@ -123,11 +123,12 @@ module Amqp
       new_properties
     end
 
-    def request(properties, payload)
+    def request(properties, payload, timeout = 15)
       temp_queue = channel.queue("", :exclusive => true)
-      channel.publish(payload, properties.merge({ :reply_to => temp_queue.name }))
+      direct_exchange = channel.direct(Exchange.request_exchange, :durable => true)
+      request_exchange.publish(payload, properties.merge({ :reply_to => temp_queue.name, :persistent => true }))
       delivery_info, properties, payload = [nil, nil, nil]
-      Timeout::timeout(15) do
+      Timeout::timeout(timeout) do
         temp_queue.subscribe({:manual_ack => true, :block => true}) do |di, prop, pay|
           delivery_info, properties, payload = [di, prop, pay]
           channel.acknowledge(di.delivery_tag, false)
