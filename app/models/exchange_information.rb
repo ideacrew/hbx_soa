@@ -9,6 +9,11 @@ class ExchangeInformation
   include Singleton
 
   REQUIRED_KEYS = [
+    'amqp_uri',
+    'environment',
+    'hbx_id',
+    'event_exchange',
+    'request_exchange',
     'invalid_argument_queue',
     'processing_failure_queue'
   ]
