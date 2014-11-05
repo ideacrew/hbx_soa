@@ -34,6 +34,7 @@ gem 'bunny'
 
 group :production do
   gem 'unicorn'
+  gem 'bluepill'
 end
 
 group :development do
