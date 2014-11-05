@@ -43,7 +43,7 @@ def define_worker(app, worker_name, directory, worker_command, watch_kids = fals
   end
 end
 
-Bluepill.application("hbx_enterprise", :log_file => BLUEPILL_LOG) do |app|
+Bluepill.application("hbx_soa", :log_file => BLUEPILL_LOG) do |app|
   app.uid = "nginx"
   app.gid = "nginx"
 end
