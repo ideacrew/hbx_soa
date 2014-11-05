@@ -1,12 +1,12 @@
 class Maybe
-  attr_reader :value  
+  attr_reader :value
 
   def initialize(obj)
     @value = obj
   end
 
-  def fmap(the_proc)
-    @value.nil? ? nil : Maybe.new(the_proc.call(@value))
+  def fmap(&the_proc)
+    @value.nil? ? Maybe.new(nil) : Maybe.new(the_proc.call(@value))
   end
 
   def method_missing(m, *args, &block)
