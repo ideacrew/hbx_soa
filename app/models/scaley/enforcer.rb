@@ -7,6 +7,7 @@ module Scaley
     end
 
     def enforce(counter)
+      @pid = read_pid_file
       info_hash = counter.statistics
       adjust_workers_for(info_hash[:workers], info_hash[:backlog])
     end
