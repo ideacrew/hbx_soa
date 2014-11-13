@@ -12,7 +12,7 @@ module Listeners
       enrollment_props = {
         :routing_key => "enrollment.get_by_id",
         :headers => {
-          :enrollment_id => eg_id
+          :enrollment_group_id => eg_id
         }
       }
       di, prop, enrollment = request(enrollment_props, "", 30)
