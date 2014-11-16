@@ -18,7 +18,7 @@ USER=nginx
 APP_NAME=bluepill_hbx_soa
 APP_ROOT=/var/www/deployments/hbx_soa/current
 PILL=$APP_ROOT/pills/hbx_soa.pill.rb
-CMD="sudo -i -u $USER -- /bin/bash -c 'cd $APP_ROOT && bluepill --no-privileged -c $APP_ROOT/../shared/pids/ -l $APP_ROOT/../shared/log/bluepill.log"
+CMD="sudo -i -u $USER -- /bin/bash -c 'cd $APP_ROOT && bluepill --no-privileged -c $APP_ROOT/pids/ -l $APP_ROOT/log/bluepill.log"
 
 case "$1" in
     start)
