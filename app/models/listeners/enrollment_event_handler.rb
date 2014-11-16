@@ -8,7 +8,7 @@ module Listeners
 
     def on_message(delivery_info, properties, payload)
       enrollment_group_uri = properties.headers['enrollment_group_uri']
-      eg_id = Maybe.new(enrollment_group_uri).split(":").split("#").last.value
+      eg_id = Maybe.new(enrollment_group_uri).split(":").last.split("#").last.value
       enrollment_props = {
         :routing_key => "enrollment.get_by_id",
         :headers => {
@@ -33,11 +33,11 @@ module Listeners
        case return_code
        when "200"
        else
-        channel.direct(ExchangeInformation.request_exchange, {:durable_change => true}).publish(
+        channel.direct(ExchangeInformation.request_exchange, {:durable => true}).publish(
           payload,
           {
             :routing_key => "enrollment.error",
-            :headers => original_headers.merge({:return_status => return_status})
+            :headers => original_headers.merge({:return_status => return_code})
           }
         )
       end
@@ -50,14 +50,24 @@ module Listeners
       when "200"
         create_enrollment(payload, original_headers, qr_uri)
       else
-        channel.direct(ExchangeInformation.request_exchange, {:durable_change => true}).publish(
+        channel.direct(ExchangeInformation.request_exchange, {:durable => true}).publish(
           payload,
           {
             :routing_key => "enrollment.error",
-            :headers => original_headers.merge({:return_status => return_status})
+            :headers => original_headers.merge({:return_status => return_code})
           }
         )
       end
+    end
+
+    def self.run
+      conn = Bunny.new(ExchangeInformation.amqp_uri)
+      conn.start
+      ch = conn.create_channel
+      ch.prefetch(1)
+      q = ch.queue(queue_name, :durable => true)
+
+      self.new(ch, q).subscribe(:block => true, :manual_ack => true)
     end
 
     def self.queue_name

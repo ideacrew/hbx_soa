@@ -1,3 +1,5 @@
+require 'json'
+
 module Amqp
   class Client
     attr_reader :channel, :queue
@@ -39,7 +41,7 @@ module Amqp
         },
         :original_payload => payload
       }
-      @channel.default_exchange.publish(error_message.to_json, error_properties(@processing_failed_queue, delivery_info, properties))
+      @channel.default_exchange.publish(JSON.dump(error_message), error_properties(@processing_failed_queue, delivery_info, properties))
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
 
@@ -121,7 +123,8 @@ module Amqp
     end
 
     def request(properties, payload, timeout = 15)
-      ::Amqp::Requestor.new(channel).request(properties, payload, timeout)
+      req_chan = channel.connection.create_channel
+      ::Amqp::Requestor.new(req_chan).request(properties, payload, timeout)
     end
   end
 end
