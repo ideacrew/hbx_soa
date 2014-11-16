@@ -15,7 +15,7 @@ module Listeners
           :enrollment_group_id => eg_id
         }
       }
-      di, prop, enrollment = request(enrollment_props, "", 30)
+      di, prop, enrollment = request(enrollment_props, "", 10)
       handle_enrollment_response(prop, enrollment, properties.headers.to_hash.dup)
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
