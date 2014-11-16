@@ -28,7 +28,7 @@ def define_worker(app, worker_name, directory, worker_command, watch_kids = fals
   app.process(worker_name) do |process|
     # puts ENV.inspect
     process.start_command = start_command_for(worker_name, worker_command)
-    process.stop_command = "/bin/kill -9 {{PID}}"
+    process.stop_command = "/bin/kill -TERM {{PID}}"
     process.start_grace_time 10.seconds
     process.stop_grace_time 30.seconds
     process.pid_file = File.join(PID_DIRECTORY, "#{worker_name}.pid")
