@@ -1,5 +1,5 @@
 HbxSoa::App.controllers :files do
-  post :store, :map => "/files" do
+  post :store, :map => "/efiles" do
     chunk_size = 21000
     bod = request.body
     sf = StreamFile.new(bod)
@@ -7,7 +7,7 @@ HbxSoa::App.controllers :files do
     sf.filename
   end
 
-  get :retrieve, :map => "/files", :with => :id do
+  get :retrieve, :map => "/efiles", :with => :id do
     content_type "application/octet-stream"
     sf = StreamFile.find(params[:id])
     if sf
