@@ -2,7 +2,7 @@ require 'securerandom'
 
 class StreamFile
   def initialize(stream)
-    @stream = stream
+    @stream = stream[:tempfile]
     @f_name = SecureRandom.uuid.gsub("-", "")
   end
 

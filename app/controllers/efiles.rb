@@ -1,8 +1,6 @@
 HbxSoa::App.controllers :files do
   post :store, :map => "/efiles" do
-    chunk_size = 21000
-    bod = request.body
-    sf = StreamFile.new(bod)
+    sf = StreamFile.new(params[:file])
     sf.store!
     sf.filename
   end
