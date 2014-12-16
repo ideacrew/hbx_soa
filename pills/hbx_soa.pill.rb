@@ -48,6 +48,6 @@ Bluepill.application("hbx_soa", :log_file => BLUEPILL_LOG) do |app|
   app.uid = "nginx"
   app.gid = "nginx"
 
-  define_worker(app, "enrollment_event_handler", BUS_DIRECTORY, "padrino r amqp/enrollment_event_handler.rb", true)
-  define_worker(app, "enrollment_event_handler_scaler", BUS_DIRECTORY, "padrino r amqp/enrollment_event_handler_scaler.rb")
+#  define_worker(app, "enrollment_event_handler", BUS_DIRECTORY, "padrino r amqp/enrollment_event_handler.rb", true)
+#  define_worker(app, "enrollment_event_handler_scaler", BUS_DIRECTORY, "padrino r amqp/enrollment_event_handler_scaler.rb")
 end
