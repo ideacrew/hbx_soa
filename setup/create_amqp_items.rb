@@ -25,12 +25,14 @@ class SetupAmqpTasks
     queue(ec.invalid_argument_queue)
     queue(ec.processing_failure_queue)
     eeh_q = queue(Listeners::EnrollmentEventHandler.queue_name)
+    en_sub_q = queue(Listeners::EnrollmentSubmittedHandler.queue_name)
 
     event_ex = exchange("topic", ec.event_exchange)
     direct_ex = exchange("direct", ec.request_exchange)
 
     eeh_q.bind(event_ex, :routing_key => "enrollment.individual.initial_enrollment")
     eeh_q.bind(event_ex, :routing_key => "enrollment.individual.renewal")
+    en_sub_q.bind(event_ex, :routing_key => Listeners::EnrollmentSubmittedHandler.event_key)
 
     emp_qhps = logging_queue(ec, "recording.ee_qhp_plan_selected")
     ind_qhps = logging_queue(ec, "recording.ind_qhp_plan_selected")
