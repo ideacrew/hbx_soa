@@ -8,7 +8,7 @@ role :app, %w{nginx@10.83.85.127}
 role :web, %w{nginx@10.83.85.127}
 role :db, %w{nginx@10.83.85.127}
 
-set :branch, "release-1.1"
+set :branch, "development"
 
 # Extended Server Syntax
 # ======================
