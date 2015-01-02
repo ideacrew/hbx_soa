@@ -18,6 +18,7 @@ gem 'haml'
 
 # Test requirements
 gem 'rspec', :group => 'test'
+gem 'rack', '1.5.2'
 gem 'rack-test', :require => 'rack/test', :group => 'test'
 
 # Padrino Stable Gem
