@@ -1,5 +1,5 @@
 ---
-:orm: none
+:orm: ohm
 :test: rspec
 :mock: none
 :script: none

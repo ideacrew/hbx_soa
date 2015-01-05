@@ -14,6 +14,7 @@ source 'https://rubygems.org'
 gem 'rake'
 
 # Component requirements
+gem 'ohm', '2.0.1'
 gem 'haml'
 
 # Test requirements
