@@ -26,9 +26,12 @@ class SetupAmqpTasks
     queue(ec.processing_failure_queue)
     eeh_q = queue(Listeners::EnrollmentEventHandler.queue_name)
     en_sub_q = queue(Listeners::EnrollmentSubmittedHandler.queue_name)
+    es_sub_q = queue(Listeners::ExchangeSequenceListener.queue_name)
 
     event_ex = exchange("topic", ec.event_exchange)
     direct_ex = exchange("direct", ec.request_exchange)
+
+    es_sub_q.bind(direct_ex, :routing_key => "sequence.next")
 
     eeh_q.bind(event_ex, :routing_key => "enrollment.individual.initial_enrollment")
     eeh_q.bind(event_ex, :routing_key => "enrollment.individual.renewal")
