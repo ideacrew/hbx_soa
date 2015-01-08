@@ -50,6 +50,8 @@ Bluepill.application("hbx_soa", :log_file => BLUEPILL_LOG) do |app|
 
 #  define_worker(app, "enrollment_event_handler", BUS_DIRECTORY, "padrino r amqp/enrollment_event_handler.rb", true)
 #  define_worker(app, "enrollment_event_handler_scaler", BUS_DIRECTORY, "padrino r amqp/enrollment_event_handler_scaler.rb")
-define_worker(app, "exchange_sequence_listener", BUS_DIRECTORY, "padrino r amqp/exchange_sequence_listener.rb", true)
-define_worker(app, "exchange_sequence_listener_scaler", BUS_DIRECTORY, "padrino r amqp/exchange_sequence_listener_scaler.rb", true)
+define_worker(app, "exchange_sequence_listener", BUS_DIRECTORY, "bundle exec padrino r amqp/exchange_sequence_listener.rb", true)
+define_worker(app, "exchange_sequence_listener_scaler", BUS_DIRECTORY, "bundle exec padrino r amqp/exchange_sequence_listener_scaler.rb", false)
+define_worker(app, "uri_resolver_listener", BUS_DIRECTORY, "bundle exec padrino r amqp/uri_resolver_listener.rb", true)
+define_worker(app, "uri_resolver_listener_scaler", BUS_DIRECTORY, "bundle exec padrino r amqp/uri_resolver_listener_scaler.rb", false)
 end
