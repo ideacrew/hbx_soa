@@ -27,6 +27,7 @@ gem 'padrino', '0.12.4'
 gem 'bunny'
 gem 'forkr', '0.1.5'
 gem 'activesupport', '4.1.8'
+gem 'nokogiri'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
