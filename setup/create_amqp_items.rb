@@ -28,12 +28,16 @@ class SetupAmqpTasks
     en_sub_q = queue(Listeners::EnrollmentSubmittedHandler.queue_name)
     es_sub_q = queue(Listeners::ExchangeSequenceListener.queue_name)
     ur_sub_q = queue(Listeners::UriResolverListener.queue_name)
+    ell_q = queue(Listeners::EventLoggingListener.queue_name)
+    rll_q = queue(Listeners::RequestLoggingListener.queue_name)
 
     event_ex = exchange("topic", ec.event_exchange)
     direct_ex = exchange("direct", ec.request_exchange)
 
     ur_sub_q.bind(direct_ex, :routing_key => "uri.resolve")
     es_sub_q.bind(direct_ex, :routing_key => "sequence.next")
+
+    ell_q.bind(event_ex, :routing_key => "#")
 
     eeh_q.bind(event_ex, :routing_key => "enrollment.individual.initial_enrollment")
     eeh_q.bind(event_ex, :routing_key => "enrollment.individual.renewal")
