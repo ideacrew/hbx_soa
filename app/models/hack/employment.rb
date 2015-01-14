@@ -10,6 +10,7 @@ module Hack
     def match?(other_fein, other_ssn, coverage_start)
       return false unless fein == other_fein
       return false unless ssn == other_ssn
+      return false if coverage_start.blank?
       coverage_begin_date = Date.strptime(coverage_start, "%Y%m%d")
       if end_date.blank?
         (coverage_begin_date >= start_date)

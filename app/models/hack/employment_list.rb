@@ -10,7 +10,7 @@ module Hack
     end
 
     def parse_file(file)
-      CSV.foreach do |row|
+      CSV.foreach(file, headers: true) do |row|
         @employments << ::Hack::Employment.new(row.to_hash)
       end
     end
