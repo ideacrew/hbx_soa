@@ -32,7 +32,10 @@ class SetupAmqpTasks
     rll_q = queue(Listeners::RequestLoggingListener.queue_name)
 
     event_ex = exchange("topic", ec.event_exchange)
+    event_pub_ex = exchange("fanout", ec.event_publish_exchange)
     direct_ex = exchange("direct", ec.request_exchange)
+
+    event_ex.bind(event_pub_ex)
 
     ur_sub_q.bind(direct_ex, :routing_key => "uri.resolve")
     es_sub_q.bind(direct_ex, :routing_key => "sequence.next")
