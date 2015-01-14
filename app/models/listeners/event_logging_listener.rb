@@ -17,7 +17,22 @@ module Listeners
 
     def fix_message_properties(delivery_info, properties)
       new_routing_key = "info.events." + delivery_info.routing_key
-      properties.to_hash.merge(:routing_key => new_routing_key)
+      new_timestamp = extract_timestamp(properties)
+      new_properties = { 
+        :routing_key => new_routing_key,
+        :timestamp => new_timestamp,
+        :app_id => properties.app_id.blank? ? "hbx_soa.event_logging_listener" : properties.app_id
+      }
+      properties.to_hash.merge(new_properties)
+    end
+
+    def extract_timestamp(properties)
+      message_ts = properties.timestamp
+      if message_ts.blank?
+        (Time.now.to_f * 1000).round
+      else
+        (message_ts.to_f * 1000).round
+      end
     end
 
     def proper_logging_patterns
