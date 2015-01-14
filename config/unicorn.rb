@@ -7,5 +7,5 @@ stderr_path shared_path + "/log/unicorn.log"
 stdout_path shared_path + "/log/unicorn.log"
 
 listen "/tmp/unicorn_hbx_soa.ap.sock"
-worker_processes 2
+worker_processes 5
 timeout 30
