@@ -54,5 +54,5 @@ define_worker(app, "exchange_sequence_listener", BUS_DIRECTORY, "bundle exec pad
 define_worker(app, "exchange_sequence_listener_scaler", BUS_DIRECTORY, "bundle exec padrino r amqp/exchange_sequence_listener_scaler.rb", false)
 define_worker(app, "uri_resolver_listener", BUS_DIRECTORY, "bundle exec padrino r amqp/uri_resolver_listener.rb", true)
 define_worker(app, "uri_resolver_listener_scaler", BUS_DIRECTORY, "bundle exec padrino r amqp/uri_resolver_listener_scaler.rb", false)
-define_worker(app, "event_logging_listener", BUS_DIRECTORY, "bundle exec padrino r amqp/event_logging_listner.rb", true)
+define_worker(app, "event_logging_listener", BUS_DIRECTORY, "bundle exec padrino r amqp/event_logging_listener.rb", true)
 end
