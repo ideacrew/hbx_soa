@@ -20,7 +20,7 @@ def unset_list
 end
 
 def start_command_for(worker_name, worker_command)
-    "#{worker_command}"
+    "bundle exec padrino r #{worker_command} -e production"
     # "cd #{BUS_DIRECTORY} && export RBENV_GEMSETS=`cat #{BUS_DIRECTORY}/.rbenv-gemsets` && echo `env` > #{LOG_DIRECTORY}/#{worker_name}_envs.log && #{worker_command}"
 end
 
@@ -50,9 +50,9 @@ Bluepill.application("hbx_soa", :log_file => BLUEPILL_LOG) do |app|
 
 #  define_worker(app, "enrollment_event_handler", BUS_DIRECTORY, "padrino r amqp/enrollment_event_handler.rb", true)
 #  define_worker(app, "enrollment_event_handler_scaler", BUS_DIRECTORY, "padrino r amqp/enrollment_event_handler_scaler.rb")
-define_worker(app, "exchange_sequence_listener", BUS_DIRECTORY, "bundle exec padrino r amqp/exchange_sequence_listener.rb", true)
-define_worker(app, "exchange_sequence_listener_scaler", BUS_DIRECTORY, "bundle exec padrino r amqp/exchange_sequence_listener_scaler.rb", false)
-define_worker(app, "uri_resolver_listener", BUS_DIRECTORY, "bundle exec padrino r amqp/uri_resolver_listener.rb", true)
-define_worker(app, "uri_resolver_listener_scaler", BUS_DIRECTORY, "bundle exec padrino r amqp/uri_resolver_listener_scaler.rb", false)
-define_worker(app, "event_logging_listener", BUS_DIRECTORY, "bundle exec padrino r amqp/event_logging_listener.rb", true)
+define_worker(app, "exchange_sequence_listener", BUS_DIRECTORY, "amqp/exchange_sequence_listener.rb", true)
+define_worker(app, "exchange_sequence_listener_scaler", BUS_DIRECTORY, "amqp/exchange_sequence_listener_scaler.rb", false)
+define_worker(app, "uri_resolver_listener", BUS_DIRECTORY, "amqp/uri_resolver_listener.rb", true)
+define_worker(app, "uri_resolver_listener_scaler", BUS_DIRECTORY, "amqp/uri_resolver_listener_scaler.rb", false)
+define_worker(app, "event_logging_listener", BUS_DIRECTORY, "amqp/event_logging_listener.rb", true)
 end
