@@ -29,15 +29,14 @@ module Listeners
       new_payload = substitute_employer_uri(parsed_payload)
       with_m_ids_payload = generate_member_ids(new_payload)
       with_ids_payload = generate_policy_ids(with_m_ids_payload)
-      elig_info = get_employment_eligibility_elements(doc)
-      employment = EmploymentList.match(*elig_info)
+      elig_info = get_employment_eligibility_elements(with_ids_payload)
+      employment = ::Hack::EmploymentList.match(*elig_info)
       if employment.blank?
-        fail_with_no_employment(with_ids_payload, elig_info, properties.headers.to_hash)
+        fail_with_no_employment(with_ids_payload.canonicalize, elig_info, properties)
       else
-        create_enrollment(fix_start_dates(with_ids_payload, employment), properties.headers.to_hash)
+        create_enrollment(fix_start_dates(with_ids_payload, employment).canonicalize, properties)
       end
-      #create_enrollment(with_ids_payload.canonicalize, properties.headers.to_hash)
-      #channel.acknowledge(delivery_info.delivery_tag, false)
+      channel.acknowledge(delivery_info.delivery_tag, false)
     end
 
     def replace_with_map(doc, id_mapping)
@@ -86,7 +85,7 @@ module Listeners
       all_ids = m_ids.uniq
       return doc if all_ids.length < 1
       new_ids = ExchangeSequence.generate_identifiers("member_id", all_ids.length)
-      replace_uris(doc, all_ids, new_ids)
+      replace_uris(doc, all_ids, new_ids.last)
     end
 
     def generate_policy_ids(doc)
@@ -100,19 +99,54 @@ module Listeners
       all_ids = m_ids.uniq
       return doc if all_ids.length < 1
       new_ids = ExchangeSequence.generate_identifiers("policy_id", all_ids.length)
-      replace_uris(doc, all_ids, new_ids)
+      replace_uris(doc, all_ids, new_ids.last)
     end
 
-    def fail_with_no_employment(enrollment_payload, elig_info, original_headers)
+    def fail_with_no_employment(enrollment_payload, elig_info, properties)
+      new_timestamp = extract_timestamp(properties)
       failure_data = {
         :reason => "no matching employment",
         :employer_fein => elig_info.first,
         :subscriber_ssn => elig_info[1],
         :coverage_start => elig_info.last 
       }
-      
+      publish_properties = {
+        :routing_key => "error.events.employer_employee.initial_enrollment",
+        :app_id => properties.app_id.blank? ? "hbx_soa.event_logging_listener" : properties.app_id,
+        :headers => {
+           :return_status => "422",
+           :error_code => JSON.dump(failure_data)   
+        },
+        :timestamp => new_timestamp
+      }
+      ex = channel.fanout(ExchangeInformation.event_publish_exchange, {:durable => true})
+      ex.publish(enrollment_payload, publish_properties)
     end
 
+
+    def create_enrollment(enrollment_payload, properties)
+      new_timestamp = extract_timestamp(properties)
+      publish_properties = {
+        :routing_key => "info.events.employer_employee.initial_enrollment",
+        :app_id => properties.app_id.blank? ? "hbx_soa.event_logging_listener" : properties.app_id,
+        :headers => {
+           :return_status => "202"
+        },
+        :timestamp => new_timestamp
+      }
+      ex = channel.fanout(ExchangeInformation.event_publish_exchange, {:durable => true})
+      ex.publish(enrollment_payload, publish_properties)
+    end
+
+    def extract_timestamp(properties)
+      message_ts = properties.timestamp
+      if message_ts.blank?
+        (Time.now.to_f * 1000).round
+      else
+        (message_ts.to_f * 1000).round
+      end
+    end
+=begin
     def create_enrollment(enrollment_payload, original_headers)
        qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
        request_props = {
@@ -135,6 +169,16 @@ module Listeners
           }
         )
       end
+    end
+=end
+    def self.run
+      conn = Bunny.new(ExchangeInformation.amqp_uri)
+      conn.start
+      ch = conn.create_channel
+      ch.prefetch(1)
+      q = ch.queue(queue_name, :durable => true)
+
+      self.new(ch, q).subscribe(:block => true, :manual_ack => true)
     end
 
     def self.queue_name
