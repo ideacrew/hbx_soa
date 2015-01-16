@@ -105,11 +105,17 @@ module Amqp
       end
     end
 
-    def error_properties(error_routing_key, delivery_info, properties)
+    def error_properties(error_routing_key, delivery_info, properties, exception = nil)
       new_properties = properties.to_hash.dup
       new_headers = new_properties[:headers] || {}
       new_headers[:previous_routing_key] = delivery_info.routing_key
       new_properties[:routing_key] = error_routing_key
+      new_properties[:timestamp] = extract_timestamp(properties)
+      if exception
+        new_headers[:return_status] = exception.return_status
+        new_headers[:error_message] = exception.message
+      end
+
       new_properties
     end
 
@@ -119,7 +125,17 @@ module Amqp
       new_headers["x-redelivery-count"] = existing_retry_count + 1
       new_properties[:headers] = new_headers
       new_properties[:routing_key] = delivery_info.routing_key
+      new_properties[:timestamp] = extract_timestamp(properties)
       new_properties
+    end
+
+    def extract_timestamp(properties)
+      message_ts = properties.timestamp
+      if message_ts.blank?
+        (Time.now.to_f * 1000).round
+      else
+        (message_ts.to_f * 1000).round
+      end
     end
 
     def request(properties, payload, timeout = 15)
