@@ -38,7 +38,7 @@ module Listeners
           create_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties)
         end
       else
-        create_enrollment(with_employer_payload.canonicalize, properties)
+        create_enrollment(with_ids_payload.canonicalize, properties)
       end
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
@@ -186,7 +186,7 @@ module Listeners
       end
     end
 
-    def is_shop?
+    def is_shop?(doc)
       !doc.at_xpath("//cv:employer_link/cv:id/cv:id",xml_ns).blank?
     end
 
