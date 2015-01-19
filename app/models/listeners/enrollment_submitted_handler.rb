@@ -26,15 +26,19 @@ module Listeners
 
     def on_message(delivery_info, properties, payload)
       parsed_payload = Nokogiri::XML(payload)
-      new_payload = substitute_employer_uri(parsed_payload)
-      with_m_ids_payload = generate_member_ids(new_payload)
+      with_m_ids_payload = generate_member_ids(parsed_payload)
       with_ids_payload = generate_policy_ids(with_m_ids_payload)
-      elig_info = get_employment_eligibility_elements(with_ids_payload)
-      employment = ::Hack::EmploymentList.match(*elig_info)
-      if employment.blank?
-        fail_with_no_employment(with_ids_payload.canonicalize, elig_info, properties)
+      if is_shop?(with_ids_payload)
+        with_employer_payload = substitute_employer_uri(with_ids_payload)
+        elig_info = get_employment_eligibility_elements(with_employer_payload)
+        employment = ::Hack::EmploymentList.match(*elig_info)
+        if employment.blank?
+          fail_with_no_employment(with_employer_payload.canonicalize, elig_info, properties)
+        else
+          create_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties)
+        end
       else
-        create_enrollment(fix_start_dates(with_ids_payload, employment).canonicalize, properties)
+        create_enrollment(with_employer_payload.canonicalize, properties)
       end
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
@@ -103,7 +107,6 @@ module Listeners
     end
 
     def fail_with_no_employment(enrollment_payload, elig_info, properties)
-      new_timestamp = extract_timestamp(properties)
       failure_data = {
         :reason => "no matching employment",
         :employer_fein => elig_info.first,
@@ -112,27 +115,40 @@ module Listeners
       }
       publish_properties = {
         :routing_key => "error.events.employer_employee.initial_enrollment",
-        :app_id => properties.app_id.blank? ? "hbx_soa.event_logging_listener" : properties.app_id,
+        :app_id => "hbx_soa.enrollment_submitted_handler",
         :headers => {
            :return_status => "422",
            :error_code => JSON.dump(failure_data)   
         },
-        :timestamp => new_timestamp
+        :timestamp => generate_timestamp
+      }
+      ex = channel.fanout(ExchangeInformation.event_publish_exchange, {:durable => true})
+      ex.publish(enrollment_payload, publish_properties)
+    end
+
+    def enrollment_invalid(enrollment_payload, code, errors)
+      publish_properties = {
+        :routing_key => "error.events.employer_employee.initial_enrollment",
+        :app_id => "hbx_soa.enrollment_submitted_handler",
+        :headers => {
+           :return_status => "422",
+           :error_code => errors
+        },
+        :timestamp => generate_timestamp
       }
       ex = channel.fanout(ExchangeInformation.event_publish_exchange, {:durable => true})
       ex.publish(enrollment_payload, publish_properties)
     end
 
 
-    def create_enrollment(enrollment_payload, properties)
-      new_timestamp = extract_timestamp(properties)
+    def enrollment_valid(enrollment_payload, properties)
       publish_properties = {
         :routing_key => "info.events.employer_employee.initial_enrollment",
-        :app_id => properties.app_id.blank? ? "hbx_soa.event_logging_listener" : properties.app_id,
+        :app_id => "hbx_soa.enrollment_submitted_handler",
         :headers => {
            :return_status => "202"
         },
-        :timestamp => new_timestamp
+        :timestamp => generate_timestamp
       }
       ex = channel.fanout(ExchangeInformation.event_publish_exchange, {:durable => true})
       ex.publish(enrollment_payload, publish_properties)
@@ -141,16 +157,20 @@ module Listeners
     def extract_timestamp(properties)
       message_ts = properties.timestamp
       if message_ts.blank?
-        (Time.now.to_f * 1000).round
+        generate_timestamp
       else
         (message_ts.to_f * 1000).round
       end
     end
-=begin
+
+    def generate_timestamp
+      (Time.now.to_f * 1000).round
+    end
+
     def create_enrollment(enrollment_payload, original_headers)
        qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
        request_props = {
-         :routing_key => "enrollment.create",
+         :routing_key => "enrollment.validate",
          :headers => {
            :qualifying_reason_uri => qr_uri
          }
@@ -160,17 +180,16 @@ module Listeners
        return_code = prop.headers["return_status"]
        case return_code
        when "200"
+         enrollment_valid(enrollment_payload, original_headers)
        else
-        channel.direct(ExchangeInformation.request_exchange, {:durable => true}).publish(
-          payload,
-          {
-            :routing_key => "enrollment.error",
-            :headers => original_headers.merge({:return_status => return_code})
-          }
-        )
+         enrollment_invalid(enrollment_payload, return_code, payload)
       end
     end
-=end
+
+    def is_shop?
+      !doc.at_xpath("//cv:employer_link/cv:id/cv:id",xml_ns).blank?
+    end
+
     def self.run
       conn = Bunny.new(ExchangeInformation.amqp_uri)
       conn.start
