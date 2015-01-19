@@ -132,9 +132,11 @@ module Amqp
     def extract_timestamp(properties)
       message_ts = properties.timestamp
       if message_ts.blank?
-        (Time.now.to_f * 1000).round
+        Time.now.to_i
       else
-        (message_ts.to_f * 1000).round
+        if message_ts.kind_of?(Time)
+          message_ts.to_i
+        end
       end
     end
 

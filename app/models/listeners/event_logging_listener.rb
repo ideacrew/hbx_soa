@@ -26,15 +26,6 @@ module Listeners
       properties.to_hash.merge(new_properties)
     end
 
-    def extract_timestamp(properties)
-      message_ts = properties.timestamp
-      if message_ts.blank?
-        (Time.now.to_f * 1000).round
-      else
-        (message_ts.to_f * 1000).round
-      end
-    end
-
     def proper_logging_patterns
       [
         "emergency",

@@ -154,17 +154,8 @@ module Listeners
       ex.publish(enrollment_payload, publish_properties)
     end
 
-    def extract_timestamp(properties)
-      message_ts = properties.timestamp
-      if message_ts.blank?
-        generate_timestamp
-      else
-        (message_ts.to_f * 1000).round
-      end
-    end
-
     def generate_timestamp
-      (Time.now.to_f * 1000).round
+      Time.now.to_i
     end
 
     def create_enrollment(enrollment_payload, original_headers, kind)
