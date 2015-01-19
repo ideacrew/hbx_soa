@@ -35,10 +35,10 @@ module Listeners
         if employment.blank?
           fail_with_no_employment(with_employer_payload.canonicalize, elig_info, properties)
         else
-          create_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties)
+          create_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties, "employer_employee")
         end
       else
-        create_enrollment(with_ids_payload.canonicalize, properties)
+        create_enrollment(with_ids_payload.canonicalize, properties, "individual")
       end
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
@@ -126,9 +126,9 @@ module Listeners
       ex.publish(enrollment_payload, publish_properties)
     end
 
-    def enrollment_invalid(enrollment_payload, code, errors)
+    def enrollment_invalid(enrollment_payload, code, errors, kind)
       publish_properties = {
-        :routing_key => "error.events.employer_employee.initial_enrollment",
+        :routing_key => "error.events.#{kind}.initial_enrollment",
         :app_id => "hbx_soa.enrollment_submitted_handler",
         :headers => {
            :return_status => "422",
@@ -141,9 +141,9 @@ module Listeners
     end
 
 
-    def enrollment_valid(enrollment_payload, properties)
+    def enrollment_valid(enrollment_payload, properties, kind)
       publish_properties = {
-        :routing_key => "info.events.employer_employee.initial_enrollment",
+        :routing_key => "info.events.#{kind}.initial_enrollment",
         :app_id => "hbx_soa.enrollment_submitted_handler",
         :headers => {
            :return_status => "202"
@@ -167,7 +167,7 @@ module Listeners
       (Time.now.to_f * 1000).round
     end
 
-    def create_enrollment(enrollment_payload, original_headers)
+    def create_enrollment(enrollment_payload, original_headers, kind)
        qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
        request_props = {
          :routing_key => "enrollment.validate",
@@ -180,9 +180,9 @@ module Listeners
        return_code = prop.headers["return_status"]
        case return_code
        when "200"
-         enrollment_valid(enrollment_payload, original_headers)
+         enrollment_valid(enrollment_payload, original_headers, kind)
        else
-         enrollment_invalid(enrollment_payload, return_code, payload)
+         enrollment_invalid(enrollment_payload, return_code, payload, kind)
       end
     end
 
