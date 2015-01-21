@@ -13,7 +13,7 @@ module Listeners
       subscriber_coverage_start = Maybe.new(
         doc.at_xpath("//cv:enrollee[contains(cv:is_subscriber, 'true')]/cv:benefit/cv:begin_date",xml_ns)
       ).content.strip.value
-      [employer_fein,subscriber_ssn,subscriber_coverage_start]
+      [employer_fein,subscriber_ssn]
     end
 
     def fix_start_dates(doc, employment)

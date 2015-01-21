@@ -11,21 +11,11 @@ describe Hack::Employment do
     }
 
     it "should not match a missing fein" do
-      expect(subject.match?("asdfdf", nil, nil)).to be_falsey
+      expect(subject.match?("asdfdf", nil)).to be_falsey
     end
 
     it "should not match a missing ssn" do
-      expect(subject.match?("123456789", "asdvbe", nil)).to be_falsey
-    end
-
-    it "should not match a coverage date before the hire date" do
-      expect(subject.match?("123456789", "987654321", "20141210")).to be_falsey
-      expect(subject.match?("123456789", "987654321", "20141214")).to be_falsey
-    end
-
-    it "should match a coverage date after or on the hire date" do
-      expect(subject.match?("123456789", "987654321", "20141215")).to be_truthy
-      expect(subject.match?("123456789", "987654321", "20150120")).to be_truthy
+      expect(subject.match?("123456789", "asdvbe")).to be_falsey
     end
   end
 end

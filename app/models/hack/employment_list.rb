@@ -15,8 +15,9 @@ module Hack
       end
     end
 
-    def match(other_fein, other_ssn, coverage_start)
-      @employments.detect { |empl| empl.match?(other_fein, other_ssn, coverage_start) }
+    def match(other_fein, other_ssn)
+      matched = @employments.select { |empl| empl.match?(other_fein, other_ssn) }
+      matched.sort_by(&:start_date).last
     end
 
     def self.match(other_fein, other_ssn, coverage_start)
