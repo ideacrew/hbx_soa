@@ -20,8 +20,8 @@ module Hack
       matched.sort_by(&:start_date).last
     end
 
-    def self.match(other_fein, other_ssn, coverage_start)
-      self.instance.match(other_fein, other_ssn, coverage_start)
+    def self.match(other_fein, other_ssn)
+      self.instance.match(other_fein, other_ssn)
     end
   end
 end
