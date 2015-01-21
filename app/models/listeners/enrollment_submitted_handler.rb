@@ -18,6 +18,9 @@ module Listeners
 
     def fix_start_dates(doc, employment)
       coverage_start = Date.new(employment.start_date.year, employment.start_date.month, 1) >> 1
+      if coverage_start < Hack::EmploymentList::EARLIEST_ENROLLMENT
+        coverage_start = Hack::EmploymentList::EARLIEST_ENROLLMENT
+      end
       doc.xpath("//cv:benefit/cv:begin_date", xml_ns).each do |node|
         node.content = coverage_start.strftime("%Y%m%d")
       end
@@ -35,10 +38,10 @@ module Listeners
         if employment.blank?
           fail_with_no_employment(with_employer_payload.canonicalize, elig_info, properties)
         else
-          create_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties, "employer_employee")
+          validate_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties, "employer_employee")
         end
       else
-        create_enrollment(with_ids_payload.canonicalize, properties, "individual")
+        validate_enrollment(with_ids_payload.canonicalize, properties, "individual")
       end
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
@@ -158,10 +161,29 @@ module Listeners
       Time.now.to_i
     end
 
-    def create_enrollment(enrollment_payload, original_headers, kind)
+    def validate_enrollment(enrollment_payload, original_headers, kind)
        qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
        request_props = {
          :routing_key => "enrollment.validate",
+         :headers => {
+           :qualifying_reason_uri => qr_uri
+         }
+       }
+
+       di, prop, payload = request(request_props, enrollment_payload, 30)
+       return_code = prop.headers["return_status"]
+       case return_code
+       when "200"
+         create_enrollment(enrollment_payload, original_headers, kind)
+       else
+         enrollment_invalid(enrollment_payload, return_code, payload, kind)
+      end
+    end
+
+    def create_enrollment(enrollment_payload, original_headers, kind)
+       qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
+       request_props = {
+         :routing_key => "enrollment.create",
          :headers => {
            :qualifying_reason_uri => qr_uri
          }

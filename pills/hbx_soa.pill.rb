@@ -55,4 +55,5 @@ define_worker(app, "exchange_sequence_listener_scaler", BUS_DIRECTORY, "amqp/exc
 define_worker(app, "uri_resolver_listener", BUS_DIRECTORY, "amqp/uri_resolver_listener.rb", true)
 define_worker(app, "uri_resolver_listener_scaler", BUS_DIRECTORY, "amqp/uri_resolver_listener_scaler.rb", false)
 define_worker(app, "event_logging_listener", BUS_DIRECTORY, "amqp/event_logging_listener.rb", true)
+define_worker(app, "enrollment_submitted_handler", BUS_DIRECTORY, "amqp/enrollment_submitted_handler.rb", true)
 end
