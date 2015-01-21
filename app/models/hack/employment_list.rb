@@ -3,6 +3,7 @@ require 'csv'
 module Hack
   class EmploymentList
     include Singleton
+    EARLIEST_ENROLLMENT = Date.new(2015, 1, 1)
 
     def initialize
       @employments = []
