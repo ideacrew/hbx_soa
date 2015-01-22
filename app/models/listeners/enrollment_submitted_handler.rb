@@ -5,6 +5,12 @@ module Listeners
       { "cv" => "http://openhbx.org/api/terms/1.0" }
     end
 
+    def get_policy_id(doc)
+      doc.xpath("//cv:policy/cv:id/cv:id", xml_ns).map do |node|
+        node.content
+      end.join(",")
+    end
+
     def get_employment_eligibility_elements(doc)
       employer_fein = Maybe.new(doc.at_xpath("//cv:employer_link/cv:id/cv:id",xml_ns)).content.strip.split("#").last.value
       subscriber_ssn = Maybe.new(
@@ -31,17 +37,18 @@ module Listeners
       parsed_payload = Nokogiri::XML(payload)
       with_m_ids_payload = generate_member_ids(parsed_payload)
       with_ids_payload = generate_policy_ids(with_m_ids_payload)
+      eg_id = properties.headers["eg_uri"]
       if is_shop?(with_ids_payload)
         with_employer_payload = substitute_employer_uri(with_ids_payload)
         elig_info = get_employment_eligibility_elements(with_employer_payload)
         employment = ::Hack::EmploymentList.match(*elig_info)
         if employment.blank?
-          fail_with_no_employment(with_employer_payload.canonicalize, elig_info, properties)
+          fail_with_no_employment(with_employer_payload.canonicalize, elig_info, properties, eg_id)
         else
-          validate_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties, "employer_employee")
+          validate_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties, "employer_employee", eg_id)
         end
       else
-        validate_enrollment(with_ids_payload.canonicalize, properties, "individual")
+        validate_enrollment(with_ids_payload.canonicalize, properties, "individual", eg_id)
       end
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
@@ -109,7 +116,7 @@ module Listeners
       replace_uris(doc, all_ids, new_ids.last)
     end
 
-    def fail_with_no_employment(enrollment_payload, elig_info, properties)
+    def fail_with_no_employment(enrollment_payload, elig_info, properties, eg_uri)
       failure_data = {
         :reason => "no matching employment",
         :employer_fein => elig_info.first,
@@ -120,6 +127,7 @@ module Listeners
         :routing_key => "error.events.employer_employee.initial_enrollment",
         :app_id => "hbx_soa.enrollment_submitted_handler",
         :headers => {
+           :eg_uri => eg_uri,
            :return_status => "422",
            :error_code => JSON.dump(failure_data)   
         },
@@ -129,11 +137,12 @@ module Listeners
       ex.publish(enrollment_payload, publish_properties)
     end
 
-    def enrollment_invalid(enrollment_payload, code, errors, kind)
+    def enrollment_invalid(enrollment_payload, code, errors, kind, eg_uri)
       publish_properties = {
         :routing_key => "error.events.#{kind}.initial_enrollment",
         :app_id => "hbx_soa.enrollment_submitted_handler",
         :headers => {
+           :eg_uri => eg_uri,
            :return_status => "422",
            :error_code => errors
         },
@@ -144,11 +153,12 @@ module Listeners
     end
 
 
-    def enrollment_valid(enrollment_payload, properties, kind)
+    def enrollment_valid(enrollment_payload, properties, kind, eg_uri)
       publish_properties = {
         :routing_key => "info.events.#{kind}.initial_enrollment",
         :app_id => "hbx_soa.enrollment_submitted_handler",
         :headers => {
+           :eg_uri => eg_uri,
            :return_status => "202"
         },
         :timestamp => generate_timestamp
@@ -161,7 +171,7 @@ module Listeners
       Time.now.to_i
     end
 
-    def validate_enrollment(enrollment_payload, original_headers, kind)
+    def validate_enrollment(enrollment_payload, original_headers, kind, eg_id)
        qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
        request_props = {
          :routing_key => "enrollment.validate",
@@ -174,13 +184,13 @@ module Listeners
        return_code = prop.headers["return_status"]
        case return_code
        when "200"
-         create_enrollment(enrollment_payload, original_headers, kind)
+         create_enrollment(enrollment_payload, original_headers, kind, eg_id)
        else
-         enrollment_invalid(enrollment_payload, return_code, payload, kind)
+         enrollment_invalid(enrollment_payload, return_code, payload, kind, eg_id)
       end
     end
 
-    def create_enrollment(enrollment_payload, original_headers, kind)
+    def create_enrollment(enrollment_payload, original_headers, kind, eg_id)
        qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
        request_props = {
          :routing_key => "enrollment.create",
@@ -193,9 +203,9 @@ module Listeners
        return_code = prop.headers["return_status"]
        case return_code
        when "200"
-         enrollment_valid(enrollment_payload, original_headers, kind)
+         enrollment_valid(enrollment_payload, original_headers, kind, eg_id)
        else
-         enrollment_invalid(enrollment_payload, return_code, payload, kind)
+         enrollment_invalid(enrollment_payload, return_code, payload, kind, eg_id)
       end
     end
 
