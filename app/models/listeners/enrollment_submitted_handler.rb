@@ -1,5 +1,8 @@
 module Listeners
   class EnrollmentSubmittedHandler < Amqp::Client
+    FailureResponse = Struct.new(
+      :enrollment_payload, :eg_uri, :st, :error_code, :kind, :response_code
+    )
 
     def xml_ns 
       { "cv" => "http://openhbx.org/api/terms/1.0" }
@@ -117,6 +120,28 @@ module Listeners
       replace_uris(doc, all_ids, new_ids.last)
     end
 
+    def failure_handler
+      Fail.new do |fresp|
+        fail_with_message(fresp.enrollment_payload, fresp.eg_uri, fresp.st, fresp.error_code, fresp.kind, fresp.response_code)
+      end
+    end
+
+    def fail_with_message(enrollment_payload, eg_uri, st, error_code, kind, code)
+      publish_properties = {
+        :routing_key => "error.events.#{kind}.initial_enrollment",
+        :app_id => "hbx_soa.enrollment_submitted_handler",
+        :headers => {
+          :submitted_timestamp => st,
+          :eg_uri => eg_uri,
+          :return_status => code,
+          :error_code => error_code
+        },
+        :timestamp => generate_timestamp
+      }
+      ex = channel.fanout(ExchangeInformation.event_publish_exchange, {:durable => true})
+      ex.publish(enrollment_payload, publish_properties)
+    end
+
     def fail_with_no_employment(enrollment_payload, elig_info, properties, eg_uri, st)
       failure_data = {
         :reason => "no matching employment",
@@ -124,35 +149,11 @@ module Listeners
         :subscriber_ssn => elig_info[1],
         :coverage_start => elig_info.last 
       }
-      publish_properties = {
-        :routing_key => "error.events.employer_employee.initial_enrollment",
-        :app_id => "hbx_soa.enrollment_submitted_handler",
-        :headers => {
-           :submitted_timestamp => st,
-           :eg_uri => eg_uri,
-           :return_status => "422",
-           :error_code => JSON.dump(failure_data)   
-        },
-        :timestamp => generate_timestamp
-      }
-      ex = channel.fanout(ExchangeInformation.event_publish_exchange, {:durable => true})
-      ex.publish(enrollment_payload, publish_properties)
+      fail_with_message(enrollment_payload, eg_uri, st, JSON.dump(failure_data), "employer_employee", "422")
     end
 
     def enrollment_invalid(enrollment_payload, code, errors, kind, eg_uri, st)
-      publish_properties = {
-        :routing_key => "error.events.#{kind}.initial_enrollment",
-        :app_id => "hbx_soa.enrollment_submitted_handler",
-        :headers => {
-           :submitted_timestamp => st,
-           :eg_uri => eg_uri,
-           :return_status => "422",
-           :error_code => errors
-        },
-        :timestamp => generate_timestamp
-      }
-      ex = channel.fanout(ExchangeInformation.event_publish_exchange, {:durable => true})
-      ex.publish(enrollment_payload, publish_properties)
+      fail_with_message(enrollment_payload, eg_uri, st, errors, kind, code)
     end
 
 
@@ -160,10 +161,10 @@ module Listeners
       publish_properties = {
         :routing_key => "info.events.#{kind}.initial_enrollment",
         :app_id => "hbx_soa.enrollment_submitted_handler",
-        :headers => {
-           :submitted_timestamp => st,
-           :eg_uri => eg_uri,
-           :return_status => "202"
+          :headers => {
+          :submitted_timestamp => st,
+          :eg_uri => eg_uri,
+          :return_status => "202"
         },
         :timestamp => generate_timestamp
       }
@@ -176,40 +177,40 @@ module Listeners
     end
 
     def validate_enrollment(enrollment_payload, original_headers, kind, eg_id, st)
-       qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
-       request_props = {
-         :routing_key => "enrollment.validate",
-         :headers => {
-           :qualifying_reason_uri => qr_uri
-         }
-       }
+      qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
+      request_props = {
+        :routing_key => "enrollment.validate",
+        :headers => {
+          :qualifying_reason_uri => qr_uri
+        }
+      }
 
-       di, prop, payload = request(request_props, enrollment_payload, 30)
-       return_code = prop.headers["return_status"]
-       case return_code
-       when "200"
-         create_enrollment(enrollment_payload, original_headers, kind, eg_id, st)
-       else
-         enrollment_invalid(enrollment_payload, return_code, payload, kind, eg_id, st)
+      di, prop, payload = request(request_props, enrollment_payload, 30)
+      return_code = prop.headers["return_status"]
+      case return_code
+      when "200"
+        create_enrollment(enrollment_payload, original_headers, kind, eg_id, st)
+      else
+        enrollment_invalid(enrollment_payload, return_code, payload, kind, eg_id, st)
       end
     end
 
     def create_enrollment(enrollment_payload, original_headers, kind, eg_id, st)
-       qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
-       request_props = {
-         :routing_key => "enrollment.create",
-         :headers => {
-           :qualifying_reason_uri => qr_uri
-         }
-       }
+      qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
+      request_props = {
+        :routing_key => "enrollment.create",
+        :headers => {
+          :qualifying_reason_uri => qr_uri
+        }
+      }
 
-       di, prop, payload = request(request_props, enrollment_payload, 30)
-       return_code = prop.headers["return_status"]
-       case return_code
-       when "200"
-         enrollment_valid(enrollment_payload, original_headers, kind, eg_id, st)
-       else
-         enrollment_invalid(enrollment_payload, return_code, payload, kind, eg_id, st)
+      di, prop, payload = request(request_props, enrollment_payload, 30)
+      return_code = prop.headers["return_status"]
+      case return_code
+      when "200"
+        enrollment_valid(enrollment_payload, original_headers, kind, eg_id, st)
+      else
+        enrollment_invalid(enrollment_payload, return_code, payload, kind, eg_id, st)
       end
     end
 
