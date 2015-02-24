@@ -45,8 +45,7 @@ namespace :deploy do
     on roles(:app), in: :sequence, wait: 5 do
       # Your restart mechanism here, for example:
       # execute :touch, release_path.join('tmp/restart.txt')
-      sudo "service unicorn_hbx_soa restart"
-      sudo "service bluepill_hbx_soa restart"
+      sudo "service eye_hbx_soa restart"
     end
   end
 

@@ -40,7 +40,8 @@ gem 'virtus'
 
 group :production do
   gem 'unicorn'
-  gem 'bluepill', '0.0.68'
+#  gem 'bluepill', '0.0.68'
+  gem 'eye'
 end
 
 group :development do
