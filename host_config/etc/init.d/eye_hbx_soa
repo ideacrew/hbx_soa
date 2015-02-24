@@ -1,0 +1,57 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides: eye_hbx_soa
+# Required-Start:    $local_fs $remote_fs $network $syslog $time
+# Required-Stop:     $local_fs $remote_fs $network $syslog
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: eye daemon, providing process monitoring
+# Description: eye process monitor
+### END INIT INFO
+# set -e
+
+. /lib/lsb/init-functions
+
+# here comes default config
+USER=nginx
+APP_NAME=eye_hbx_soa
+APP_ROOT=/var/www/deployments/hbx_soa/current
+EYE_HOME=/var/www/deployments/hbx_soa/current
+EYE=$APP_ROOT/eyes/hbx_soa.eye.rb
+CMD="sudo -i -u $USER -- /bin/bash -c 'cd $APP_ROOT && bundle exec leye --eyefile $EYE --eyehome $APP_ROOT/eye"
+
+case "$1" in
+    start)
+        echo -n "Starting eye for user $USER"
+        eval "$CMD load'"
+        ;;
+    quit)
+        echo "Shutting down eye processes"
+        eval "$CMD stop $APP_NAME'"
+
+        echo "Shutting down eye daemon"
+        eval "$CMD quit'"
+        ;;
+    stop)
+        echo "Shutting down eye processes"
+        eval "$CMD stop $APP_NAME'"
+        ;;
+    restart)
+        echo "Restarting eye processes"
+        eval "$CMD restart $APP_NAME'"
+        ;;
+    status)
+        eval "$CMD info'"
+        ;;
+    explain)
+        eval "$CMD x -c'"
+        ;;
+    xinfo)
+        eval "$CMD xinfo'"
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+        ;;
+esac

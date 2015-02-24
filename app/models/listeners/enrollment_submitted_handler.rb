@@ -4,6 +4,10 @@ module Listeners
       :enrollment_payload, :eg_uri, :st, :error_code, :kind, :response_code
     )
 
+    PolicyProperties = Struct.new(
+      :eg_id, :submitted_timestamp, :kind
+    )
+
     def xml_ns 
       { "cv" => "http://openhbx.org/api/terms/1.0" }
     end
@@ -42,27 +46,49 @@ module Listeners
       with_ids_payload = generate_policy_ids(with_m_ids_payload)
       eg_id = properties.headers["eg_uri"]
       st = properties.headers["submitted_timestamp"]
+      workflow = Fail.new do |fresp|
+        fail_with_message(fresp.enrollment_payload, fresp.eg_uri, fresp.st, fresp.error_code, fresp.kind, fresp.response_code)
+      end
       if is_shop?(with_ids_payload)
-        with_employer_payload = substitute_employer_uri(with_ids_payload)
-        elig_info = get_employment_eligibility_elements(with_employer_payload)
-        employment = ::Hack::EmploymentList.match(*elig_info)
-        if employment.blank?
-          fail_with_no_employment(with_employer_payload.canonicalize, elig_info, properties, eg_id, st)
-        else
-          validate_enrollment(fix_start_dates(with_employer_payload, employment).canonicalize, properties, "employer_employee", eg_id, st)
+        workflow.bind do |data|
+          working_payload, props, eg_uri, sub_time = data
+          with_employer_payload = substitute_employer_uri(working_payload)
+          elig_info = get_employment_eligibility_elements(with_employer_payload)
+          employment = ::Hack::EmploymentList.match(*elig_info)
+          if employment.blank?
+            failure_data = {
+              :reason => "no matching employment",
+              :employer_fein => elig_info.first,
+              :subscriber_ssn => elig_info[1],
+              :coverage_start => elig_info.last
+            }
+            throw :fail, FailureResponse.new(with_employer_payload.canonicalize, eg_uri, sub_time, JSON.dump(failure_data), "employer_employee", "422")
+          end
+          fixed_payload = fix_start_dates(with_employer_payload, employment).canonicalize
+          [fixed_payload, props, PolicyProperties.new(eg_uri, sub_time, "employer_employee")]
         end
       else
-        validate_enrollment(with_ids_payload.canonicalize, properties, "individual", eg_id, st)
+        workflow.bind do |data|
+          working_payload, props, eg_uri, sub_time = data
+          fixed_payload = working_payload.canonicalize
+          [fixed_payload, props, PolicyProperties.new(eg_uri, sub_time, "individual")]
+        end
       end
+      workflow.bind do |data|
+        fixed_payload, props, pol_props = data
+        validate_enrollment(fixed_payload, props, pol_props)
+        create_enrollment(fixed_payload, props, pol_props.kind, pol_props.eg_uri, pol_props.submitted_timestamp)
+      end
+      workflow.call([with_ids_payload, properties, eg_id, st])
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
 
     def replace_with_map(doc, id_mapping)
       id_mapping.each_pair do |k,v|
-         xpath_query = "//*[contains(text(),'#{k}')]"
-         doc.xpath(xpath_query, xml_ns).each do |node|
-           node.content = v.to_s
-         end
+        xpath_query = "//*[contains(text(),'#{k}')]"
+        doc.xpath(xpath_query, xml_ns).each do |node|
+          node.content = v.to_s
+        end
       end
       doc
     end
@@ -87,7 +113,7 @@ module Listeners
       return doc if all_ids.length < 1
       replace_map = {}
       all_ids.each do |e_id|
-       replace_map[e_id] = UriReference.resolve_uri(e_id)
+        replace_map[e_id] = UriReference.resolve_uri(e_id)
       end
       replace_with_map(doc, replace_map)
     end
@@ -120,17 +146,11 @@ module Listeners
       replace_uris(doc, all_ids, new_ids.last)
     end
 
-    def failure_handler
-      Fail.new do |fresp|
-        fail_with_message(fresp.enrollment_payload, fresp.eg_uri, fresp.st, fresp.error_code, fresp.kind, fresp.response_code)
-      end
-    end
-
     def fail_with_message(enrollment_payload, eg_uri, st, error_code, kind, code)
       publish_properties = {
         :routing_key => "error.events.#{kind}.initial_enrollment",
         :app_id => "hbx_soa.enrollment_submitted_handler",
-        :headers => {
+          :headers => {
           :submitted_timestamp => st,
           :eg_uri => eg_uri,
           :return_status => code,
@@ -142,20 +162,9 @@ module Listeners
       ex.publish(enrollment_payload, publish_properties)
     end
 
-    def fail_with_no_employment(enrollment_payload, elig_info, properties, eg_uri, st)
-      failure_data = {
-        :reason => "no matching employment",
-        :employer_fein => elig_info.first,
-        :subscriber_ssn => elig_info[1],
-        :coverage_start => elig_info.last 
-      }
-      fail_with_message(enrollment_payload, eg_uri, st, JSON.dump(failure_data), "employer_employee", "422")
-    end
-
     def enrollment_invalid(enrollment_payload, code, errors, kind, eg_uri, st)
       fail_with_message(enrollment_payload, eg_uri, st, errors, kind, code)
     end
-
 
     def enrollment_valid(enrollment_payload, properties, kind, eg_uri, st)
       publish_properties = {
@@ -176,7 +185,7 @@ module Listeners
       Time.now.to_i
     end
 
-    def validate_enrollment(enrollment_payload, original_headers, kind, eg_id, st)
+    def validate_enrollment(enrollment_payload, original_headers, pol_props)
       qr_uri = "urn:dc0:terms:v1:qualifying_life_event#initial_enrollment"
       request_props = {
         :routing_key => "enrollment.validate",
@@ -187,11 +196,8 @@ module Listeners
 
       di, prop, payload = request(request_props, enrollment_payload, 30)
       return_code = prop.headers["return_status"]
-      case return_code
-      when "200"
-        create_enrollment(enrollment_payload, original_headers, kind, eg_id, st)
-      else
-        enrollment_invalid(enrollment_payload, return_code, payload, kind, eg_id, st)
+      if "200" != return_code
+        throw :fail, FailureResponse.new(enrollment_payload, pol_props.eg_id, pol_props.submitted_timestamp, payload, pol_props.kind, return_code)
       end
     end
 
@@ -206,12 +212,10 @@ module Listeners
 
       di, prop, payload = request(request_props, enrollment_payload, 30)
       return_code = prop.headers["return_status"]
-      case return_code
-      when "200"
-        enrollment_valid(enrollment_payload, original_headers, kind, eg_id, st)
-      else
-        enrollment_invalid(enrollment_payload, return_code, payload, kind, eg_id, st)
+      if "200" != return_code
+        throw :fail, FailureResponse.new(enrollment_payload, pol_props.eg_id, pol_props.submitted_timestamp, payload, pol_props.kind, return_code)
       end
+      enrollment_valid(enrollment_payload, original_headers, pol_props.kind, pol_props.eg_id, pol_props.submitted_timestamp)
     end
 
     def is_shop?(doc)
