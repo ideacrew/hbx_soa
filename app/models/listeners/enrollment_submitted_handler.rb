@@ -60,7 +60,7 @@ module Listeners
               :reason => "no matching employment",
               :employer_fein => elig_info.first,
               :subscriber_ssn => elig_info[1],
-              :coverage_start => elig_info.last
+              :coverage_start => sub_time.to_s
             }
             throw :fail, FailureResponse.new(with_employer_payload.canonicalize, eg_uri, sub_time, JSON.dump(failure_data), "employer_employee", "422")
           end
