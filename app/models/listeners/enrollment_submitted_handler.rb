@@ -215,7 +215,7 @@ module Listeners
       if "200" != return_code
         throw :fail, FailureResponse.new(enrollment_payload, pol_props.eg_id, pol_props.submitted_timestamp, payload, pol_props.kind, return_code)
       end
-      enrollment_valid(enrollment_payload, original_headers, pol_props.kind, pol_props.eg_id, pol_props.submitted_timestamp)
+      enrollment_valid(enrollment_payload, original_headers, kind, eg_id, st)
     end
 
     def is_shop?(doc)
