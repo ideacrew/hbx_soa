@@ -77,7 +77,7 @@ module Listeners
       workflow.bind do |data|
         fixed_payload, props, pol_props = data
         validate_enrollment(fixed_payload, props, pol_props)
-        create_enrollment(fixed_payload, props, pol_props.kind, pol_props.eg_uri, pol_props.submitted_timestamp)
+        create_enrollment(fixed_payload, props, pol_props.kind, pol_props.eg_id, pol_props.submitted_timestamp)
       end
       workflow.call([with_ids_payload, properties, eg_id, st])
       channel.acknowledge(delivery_info.delivery_tag, false)
