@@ -2,7 +2,7 @@ require 'csv'
 
 module Hack
   class EmploymentList
-    include Singleton
+    # include Singleton
     EARLIEST_ENROLLMENT = Date.new(2015, 1, 1)
 
     def initialize
@@ -22,7 +22,7 @@ module Hack
     end
 
     def self.match(other_fein, other_ssn)
-      self.instance.match(other_fein, other_ssn)
+      self.new.match(other_fein, other_ssn)
     end
   end
 end
