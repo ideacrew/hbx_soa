@@ -16,13 +16,13 @@ module Hack
       end
     end
 
-    def match(other_fein, other_ssn)
-      matched = @employments.select { |empl| empl.match?(other_fein, other_ssn) }
+    def match(other_fein, other_ssn, other_dob)
+      matched = @employments.select { |empl| empl.match?(other_fein, other_ssn, other_dob) }
       matched.sort_by(&:start_date).last
     end
 
-    def self.match(other_fein, other_ssn)
-      self.new.match(other_fein, other_ssn)
+    def self.match(other_fein, other_ssn, other_dob)
+      self.new.match(other_fein, other_ssn, other_dob)
     end
   end
 end

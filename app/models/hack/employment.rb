@@ -8,9 +8,9 @@ module Hack
     attribute :end_date, Date
     attribute :dob, Date
 
-    def match?(other_fein, other_ssn)
+    def match?(other_fein, other_ssn, other_dob)
       return false unless fein == other_fein
-      ssn == other_ssn
+      ssn == other_ssn && dob == other_dob
     end
 
     def dob=(val)

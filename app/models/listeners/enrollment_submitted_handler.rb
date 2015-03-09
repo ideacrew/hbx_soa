@@ -8,7 +8,7 @@ module Listeners
       :eg_id, :submitted_timestamp, :kind
     )
 
-    def xml_ns 
+    def xml_ns
       { "cv" => "http://openhbx.org/api/terms/1.0" }
     end
 
@@ -23,10 +23,13 @@ module Listeners
       subscriber_ssn = Maybe.new(
         doc.at_xpath("//cv:enrollee[contains(cv:is_subscriber, 'true')]/cv:member/cv:person_demographics/cv:ssn",xml_ns)
       ).content.strip.value
+      subscriber_dob = Maybe.new(
+        doc.at_xpath("//cv:enrollee[contains(cv:is_subscriber, 'true')]/cv:member/cv:person_demographics/cv:birth_date",xml_ns)
+      ).content.strip.value
       subscriber_coverage_start = Maybe.new(
         doc.at_xpath("//cv:enrollee[contains(cv:is_subscriber, 'true')]/cv:benefit/cv:begin_date",xml_ns)
       ).content.strip.value
-      [employer_fein,subscriber_ssn]
+      [employer_fein,subscriber_ssn,subscriber_dob]
     end
 
     def fix_start_dates(doc, employment)
@@ -60,6 +63,7 @@ module Listeners
               :reason => "no matching employment",
               :employer_fein => elig_info.first,
               :subscriber_ssn => elig_info[1],
+              :subscriber_dob => elig_info[2].to_s,
               :coverage_start => sub_time.to_s
             }
             throw :fail, FailureResponse.new(with_employer_payload.canonicalize, eg_uri, sub_time, JSON.dump(failure_data), "employer_employee", "422")

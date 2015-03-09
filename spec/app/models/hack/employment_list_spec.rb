@@ -21,7 +21,7 @@ describe Hack::EmploymentList do
     }
 
     it "should match the most recent employment when multiples are matched" do
-      expect(subject.match("123456789", "987654321")).to eq(employment1)
+      expect(subject.match("123456789", "987654321","20120102")).to eq(employment1)
     end
   end
 end
