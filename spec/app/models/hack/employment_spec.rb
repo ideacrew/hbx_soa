@@ -7,6 +7,7 @@ describe Hack::Employment do
         :fein => "123456789",
         :ssn => "987654321",
         :start_date => "20141215",
+        :dob => "20120102"
       }) 
     }
 

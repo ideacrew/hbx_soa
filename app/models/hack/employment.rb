@@ -6,10 +6,35 @@ module Hack
     attribute :ssn, String
     attribute :start_date, Date
     attribute :end_date, Date
+    attribute :dob, Date
 
     def match?(other_fein, other_ssn)
       return false unless fein == other_fein
       ssn == other_ssn
+    end
+
+    def dob=(val)
+      if val.kind_of?(Date)
+        super val
+      else
+        super Date.strptime(val.to_s, "%Y%m%d")
+      end
+    end
+
+    def start_date=(val)
+      if val.kind_of?(Date)
+        super val
+      else
+        super Date.strptime(val.to_s, "%Y%m%d")
+      end
+    end
+
+    def end_date=(val)
+      if val.kind_of?(Date)
+        super val
+      else
+        super Date.strptime(val.to_s, "%Y%m%d")
+      end
     end
   end
 end
