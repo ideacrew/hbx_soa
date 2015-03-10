@@ -29,6 +29,11 @@ module Listeners
       subscriber_coverage_start = Maybe.new(
         doc.at_xpath("//cv:enrollee[contains(cv:is_subscriber, 'true')]/cv:benefit/cv:begin_date",xml_ns)
       ).content.strip.value
+      begin
+        subscriber_dob = Date.parse(subscriber_dob)
+      rescue ArgumentError
+        subscriber_dob = "invalid date #{subscriber_dob}"
+      end
       [employer_fein,subscriber_ssn,subscriber_dob]
     end
 
