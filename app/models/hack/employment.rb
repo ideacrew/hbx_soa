@@ -30,10 +30,12 @@ module Hack
     end
 
     def end_date=(val)
-      if val.kind_of?(Date)
-        super val
-      else
-        super Date.strptime(val.to_s, "%Y%m%d")
+      unless val.blank?
+        if val.kind_of?(Date)
+          super val
+        else
+          super Date.strptime(val.to_s, "%Y%m%d")
+        end
       end
     end
   end
