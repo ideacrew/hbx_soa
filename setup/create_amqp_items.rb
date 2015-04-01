@@ -30,6 +30,7 @@ class SetupAmqpTasks
     ur_sub_q = queue(Listeners::UriResolverListener.queue_name)
     ell_q = queue(Listeners::EventLoggingListener.queue_name)
     rll_q = queue(Listeners::RequestLoggingListener.queue_name)
+    email_queue = queue(Listeners::EmailNotificationListener.queue_name)
 
     event_ex = exchange("topic", ec.event_exchange)
     event_pub_ex = exchange("fanout", ec.event_publish_exchange)
@@ -50,6 +51,8 @@ class SetupAmqpTasks
     ind_qhps = logging_queue(ec, "recording.ind_qhp_plan_selected")
     emp_qhps.bind(event_ex, :routing_key => "employer_employee.qhp_selected")
     ind_qhps.bind(event_ex, :routing_key => "individual.qhp_selected")
+
+    email_queue.bind(event_ex, :routing_key => "info.user_notifications.email.published")
   end
 end
 

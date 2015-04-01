@@ -46,6 +46,7 @@ Eye.application 'eye_hbx_soa' do
   define_worker("event_logging_listener", BUS_DIRECTORY, "amqp/event_logging_listener.rb", true)
   define_worker("enrollment_submitted_handler", BUS_DIRECTORY, "amqp/enrollment_submitted_handler.rb", true)
   define_worker("enrollment_submitted_handler_scaler", BUS_DIRECTORY, "amqp/enrollment_submitted_handler_scaler.rb", false)
+  define_worker("email_notification_listener", BUS_DIRECTORY, "amqp/email_notification_listener.rb", false)
 
   process("unicorn") do
     working_dir BUS_DIRECTORY

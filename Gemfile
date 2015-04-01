@@ -29,6 +29,7 @@ gem 'forkr', '0.1.7'
 gem 'activesupport', '4.1.8'
 gem 'nokogiri'
 gem 'virtus'
+gem 'pony'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
