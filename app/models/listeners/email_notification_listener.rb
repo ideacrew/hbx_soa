@@ -16,12 +16,18 @@ module Listeners
     def on_message(delivery_info, properties, payload)
       subject = properties.headers['subject']
       recipient = properties.headers['recipient']
+      format = properties.headers['format']
       body = payload
+      body_opts = case format
+      when "html"
+        { :html_body => body }
+      else
+        { :body => body }
+      end
       Pony.mail({
         :to => recipient,
         :from => "no-reply@shop.dchealthlink.com",
         :subject => subject,
-        :body => body,
         :via => :smtp,
         :via_options => {
           :to => recipient,
@@ -29,7 +35,7 @@ module Listeners
           :host => "smtp4.dc.gov",
           :port => "25"
         }
-      })
+      }.merge(body_opts))
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
 
