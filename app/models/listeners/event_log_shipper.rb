@@ -26,20 +26,25 @@ module Listeners
       levels[level_name.to_s.downcase]
     end
 
+    def extract_host(props)
+      props_strings = properties.to_hash.stringify_keys
+      return({}) if !props_strings.has_key?("host")
+      { :host => props_strings["host"] }
+    end
+
     def extract_gelf_hash(delivery_info, properties)
       headers = properties.headers || {}
 #      raise delivery_info.routing_key.inspect
       routing_key_string = delivery_info.routing_key
-      level_name, facility, resource, *rest = routing_key_string.split(".")
+      level_name, facility, *rest = routing_key_string.split(".")
       new_timestamp = extract_timestamp(properties)
       new_properties = { 
         :version => "1.1",
         :timestamp => new_timestamp,
         :facility => facility,
-        :host => resource,
         :short_message => rest.join("."),
         :level => level_from_hash(level_name)
-      }
+      }.merge(extract_host(properties))
       properties.to_hash.each_pair do |k,v|
         if ![:headers, "headers"].include?(k)
           new_properties["_#{k.to_s}"] = v
