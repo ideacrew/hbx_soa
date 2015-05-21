@@ -1,3 +1,7 @@
+require "active_support"
+require "active_support/core_ext/numeric"
+require "active_support/core_ext/date"
+
 module Listeners
   class EnrollmentSubmittedHandler < Amqp::Client
     FailureResponse = Struct.new(
@@ -37,8 +41,17 @@ module Listeners
       [employer_fein,subscriber_ssn,subscriber_dob]
     end
 
-    def fix_start_dates(doc, employment)
-      coverage_start = Date.new(employment.start_date.year, employment.start_date.month, 1) >> 1
+    def fix_start_dates(doc, employment, eg_uri, sub_time)
+      # FIXME: Current fix for rejecting employees hired more than
+      #        60 days ago
+      employment_start = employment.start_date
+      if employment_start < (Date.today - 60.days)
+        throw :fail, FailureResponse.new(doc.canonicalize, eg_uri, sub_time, "employee hired more than 60 days ago", "employer_employee", "422")
+      end
+      coverage_start = Date.new(employment.start_date.year, employment.start_date.month, 1)
+      if employment.start_date.day > 1
+        coverage_start = Date.new(employment.start_date.year, employment.start_date.month, 1) >> 1
+      end
       if coverage_start < Hack::EmploymentList::EARLIEST_ENROLLMENT
         coverage_start = Hack::EmploymentList::EARLIEST_ENROLLMENT
       end
@@ -73,7 +86,7 @@ module Listeners
             }
             throw :fail, FailureResponse.new(with_employer_payload.canonicalize, eg_uri, sub_time, JSON.dump(failure_data), "employer_employee", "422")
           end
-          fixed_payload = fix_start_dates(with_employer_payload, employment).canonicalize
+          fixed_payload = fix_start_dates(with_employer_payload, employment, eg_uri, sub_time).canonicalize
           [fixed_payload, props, PolicyProperties.new(eg_uri, sub_time, "employer_employee")]
         end
       else

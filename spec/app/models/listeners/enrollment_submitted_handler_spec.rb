@@ -1,4 +1,10 @@
 require 'spec_helper'
+require "active_support"
+require "active_support/duration"
+require "active_support/core_ext/numeric"
+require "active_support/core_ext/date"
+require "active_support/core_ext/date/calculations"
+require "active_support/core_ext/date_and_time/calculations"
 
 describe Listeners::EnrollmentSubmittedHandler do
   let(:xml_ns) { { "cv" => "http://openhbx.org/api/terms/1.0" } }
@@ -16,13 +22,32 @@ describe Listeners::EnrollmentSubmittedHandler do
   end
 
   describe "which has a matching employment" do
-    let(:enrollment_match) { instance_double("Hack::Employment", :start_date => Date.new(2015, 1, 15) ) }
+    let(:enrollment_date) { Date.today.months_ago(1).beginning_of_month }
+    let(:expected_start) { enrollment_date.strftime("%Y%m%d") }
+    let(:enrollment_match) { instance_double("Hack::Employment", :start_date => enrollment_date) }
 
     let(:input_xml) { f = File.open(File.join(Padrino.root, "spec/data/submitted_enrollment.xml")); Nokogiri::XML(f) }
 
     it "should provide the correct coverage date" do
-      result = listener.fix_start_dates(input_xml, enrollment_match)
-      expect(result.at_xpath("//cv:enrollee[contains(cv:is_subscriber, 'true')]/cv:benefit/cv:begin_date[text()='20150201']",xml_ns).blank?).to be_falsey
+      result = listener.fix_start_dates(input_xml, enrollment_match,nil,nil)
+      search_xpath = "//cv:enrollee[contains(cv:is_subscriber, 'true')]/cv:benefit/cv:begin_date[text()='#{expected_start}']"
+      expect(result.at_xpath(search_xpath, xml_ns).blank?).to be_falsey
+    end 
+  end
+
+  describe "which has a matching employment that started more than 60 days ago" do
+    let(:enrollment_match) { instance_double("Hack::Employment", :start_date => (Date.today - (61.days))) }
+
+    let(:input_xml) { f = File.open(File.join(Padrino.root, "spec/data/submitted_enrollment.xml")); Nokogiri::XML(f) }
+    let(:eg_uri) { double }
+    let(:submitted_at) { double }
+    let(:thrown_failure) { double }
+    before(:each) do
+      allow(Listeners::EnrollmentSubmittedHandler::FailureResponse).to receive(:new).and_return(thrown_failure)
+    end
+
+    it "should provide the correct coverage date" do
+      expect { listener.fix_start_dates(input_xml, enrollment_match,eg_uri,submitted_at) }.to throw_symbol(:fail, thrown_failure)
     end 
   end
 
