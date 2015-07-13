@@ -27,7 +27,7 @@ module Listeners
     end
 
     def extract_host(props)
-      props_strings = properties.to_hash.stringify_keys
+      props_strings = props.to_hash.stringify_keys
       return({}) if !props_strings.has_key?("host")
       { :host => props_strings["host"] }
     end
@@ -36,7 +36,7 @@ module Listeners
       headers = properties.headers || {}
       routing_key_string = delivery_info.routing_key
       level_name, facility, *rest = routing_key_string.split(".")
-      new_timestamp = extract_time_value(properties)
+      new_timestamp = extract_time_value(properties.to_hash.dup)
       new_properties = { 
         :version => "1.1",
         :timestamp => new_timestamp.to_i,
