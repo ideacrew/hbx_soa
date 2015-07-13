@@ -34,13 +34,12 @@ module Listeners
 
     def extract_gelf_hash(delivery_info, properties)
       headers = properties.headers || {}
-#      raise delivery_info.routing_key.inspect
       routing_key_string = delivery_info.routing_key
       level_name, facility, *rest = routing_key_string.split(".")
-      new_timestamp = extract_timestamp(properties)
+      new_timestamp = extract_time_value(properties)
       new_properties = { 
         :version => "1.1",
-        :timestamp => new_timestamp,
+        :timestamp => new_timestamp.to_i,
         :facility => facility,
         :short_message => rest.join("."),
         :level => level_from_hash(level_name)
@@ -54,6 +53,42 @@ module Listeners
         new_properties["_#{k.to_s}"] = v
       end
       new_properties
+    end
+
+    def extract_time_value(props)
+      time_from_submitted = extract_start_time(props)
+      time_from_timestamp = extract_timestamp_prop(props)
+      if !time_from_submitted.nil?
+        return time_from_submitted
+      elsif !time_from_timestamp.nil?
+        return time_from_timestamp
+      end
+      Time.now
+    end
+
+    def extract_timestamp_prop(props)
+      if props.has_key?(:timestamp)
+        return(Time.at(props[:timestamp].to_i) rescue nil)
+      elsif props.has_key?("timestamp")
+        return(Time.at(props["timestamp"].to_i) rescue nil)
+      end
+    end
+
+    def extract_start_time(props)
+      headers = props[:headers] || {}
+      if headers.has_key?("submitted_timestamp")
+        return(parse_submitted_at(headers["submitted_timestamp"]))
+      elsif headers.has_key?(:submitted_timestamp)
+        return(parse_submitted_at(headers[:submitted_timestamp]))
+      end
+      nil
+    end
+
+    def parse_submitted_at(val)
+      if val.kind_of?(Time)
+        return val
+      end
+      ActiveSupport::TimeZone.new("UTC").parse(val) rescue nil
     end
 
     def self.queue_name
