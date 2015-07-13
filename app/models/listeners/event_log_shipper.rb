@@ -7,7 +7,8 @@ module Listeners
         "#{ec.hbx_id}.#{ec.environment}.q.graylog.events",
         { :durable => true }
       )
-      published_queue.publish(JSON.dump(publishing_hash.merge("full_message" => payload)), {})
+      utf8_payload = payload.nil? ? "" : payload.encode("utf-8")
+      published_queue.publish(JSON.dump(publishing_hash.merge("full_message" => utf8_payload)), {})
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
 
