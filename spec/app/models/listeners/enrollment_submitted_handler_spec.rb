@@ -17,7 +17,7 @@ describe Listeners::EnrollmentSubmittedHandler do
        allow(UriReference).to receive(:resolve_uri).with("urn:dc0:terms:v1:employer_names#senate").and_return("some_id")
        doc = listener.substitute_employer_uri(input_xml)
        e_elements = listener.get_employment_eligibility_elements(doc)
-       expect(e_elements).to eq ["some_id","112233445"]
+       expect(e_elements).to eq ["some_id","112233445", Date.new(1982, 6, 15)]
     end
   end
 
