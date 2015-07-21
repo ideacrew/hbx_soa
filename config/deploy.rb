@@ -42,7 +42,9 @@ namespace :deploy do
 
   desc 'Start application for the first time'
   task :start do
+    on roles(:app), in: :sequence, wait: 5 do
       sudo "service eye_hbx_soa start"
+    end
   end
 
   desc 'Restart application'
