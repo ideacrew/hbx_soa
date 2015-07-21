@@ -40,12 +40,17 @@ set :keep_releases, 5
 
 namespace :deploy do
 
+  desc 'Start application for the first time'
+  task :start do
+      sudo "service eye_hbx_soa start"
+  end
+
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
       # Your restart mechanism here, for example:
       # execute :touch, release_path.join('tmp/restart.txt')
-      sudo "service eye_hbx_soa restart"
+      sudo "service eye_hbx_soa reload"
     end
   end
 
