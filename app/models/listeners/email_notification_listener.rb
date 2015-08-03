@@ -38,9 +38,9 @@ module Listeners
           :authentication => :plain,
           :port => "25"
         }
-      }).merge(body_opts).merge({
+      }.merge(body_opts).merge({
          :from => "redmine@dchbx.org"
-      })
+      }))
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
 
