@@ -36,7 +36,7 @@ module Listeners
           :password => "AkRSaDR87tAbqmtqdRMF2+jMRJPeZBBzoZZiwEKXMX9K",
           :domain => "dchbx.org",
           :authentication => :plain,
-          :port => "587"
+          :port => "25"
         }
       }).merge(body_opts).merge({
          :from => "redmine@dchbx.org"
