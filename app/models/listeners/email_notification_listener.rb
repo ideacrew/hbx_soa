@@ -26,16 +26,21 @@ module Listeners
       end
       Pony.mail({
         :to => recipient,
-        :from => "no-reply@shop.dchealthlink.com",
         :subject => subject,
         :via => :smtp,
         :via_options => {
           :to => recipient,
-          :from => "no-reply@shop.dchealthlink.com",
-          :host => "smtp4.dc.gov",
+          :from => "redmine@dchbx.org",
+          :host => "email-smtp.us-east-1.amazonaws.com",
+          :user_name => "AKIAIYVVXBZNWIJZ23RQ",
+          :password => "AkRSaDR87tAbqmtqdRMF2+jMRJPeZBBzoZZiwEKXMX9K",
+          :domain => "dchbx.org",
+          :authentication => :plain,
           :port => "25"
         }
-      }.merge(body_opts))
+      }.merge(body_opts).merge({
+         :from => "redmine@dchbx.org"
+      })
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
 
