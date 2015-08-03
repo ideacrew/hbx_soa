@@ -31,7 +31,7 @@ module Listeners
         :via_options => {
           :to => recipient,
           :from => "redmine@dchbx.org",
-          :host => "email-smtp.us-east-1.amazonaws.com",
+          :address => "email-smtp.us-east-1.amazonaws.com",
           :user_name => "AKIAIYVVXBZNWIJZ23RQ",
           :password => "AkRSaDR87tAbqmtqdRMF2+jMRJPeZBBzoZZiwEKXMX9K",
           :domain => "dchbx.org",
