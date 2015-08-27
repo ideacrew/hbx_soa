@@ -1,1 +1,1 @@
-Forkr.new(Listeners::ExchangeSequenceListener, 3).run
+Forkr.new(Listeners::ExchangeSequenceListener, 20).run
