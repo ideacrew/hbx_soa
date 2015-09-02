@@ -2,7 +2,7 @@
 lock '3.2.1'
 
 set :application, 'hbx_soa'
-set :repo_url, 'git@github.com:dchbx/hbx_soa.git'
+set :repo_url, 'https://github.com/dchbx/hbx_soa.git'
 
 # Default branch is :master
 # ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }.call
