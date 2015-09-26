@@ -1,7 +1,7 @@
 module Scaley
   class RabbitCounter
     def initialize(amqp_uri, queue_name)
-      @bunny = Bunny.new(amqp_uri)
+      @bunny = Bunny.new(amqp_uri, :heartbeat => 10)
       @bunny.start
       @channel = @bunny.create_channel
       @queue = @channel.queue(queue_name, :durable => true)
