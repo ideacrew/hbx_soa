@@ -16,7 +16,9 @@ class ExchangeInformation
     'event_publish_exchange',
     'request_exchange',
     'invalid_argument_queue',
-    'processing_failure_queue'
+    'processing_failure_queue',
+    'email_username',
+    'email_password'
   ]
 
   attr_reader :config

@@ -32,8 +32,8 @@ module Listeners
           :to => recipient,
           :from => "redmine@dchbx.org",
           :address => "email-smtp.us-east-1.amazonaws.com",
-          :user_name => "AKIAIYVVXBZNWIJZ23RQ",
-          :password => "AkRSaDR87tAbqmtqdRMF2+jMRJPeZBBzoZZiwEKXMX9K",
+          :user_name => ExchangeInformation.email_username,
+          :password => ExchangeInformation.email_password,
           :domain => "dchbx.org",
           :authentication => :plain,
           :port => "587"
