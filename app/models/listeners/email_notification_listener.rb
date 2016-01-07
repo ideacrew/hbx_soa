@@ -30,11 +30,11 @@ module Listeners
         :via => :smtp,
         :via_options => {
           :to => recipient,
-          :from => "redmine@dchbx.org",
-          :address => "email-smtp.us-east-1.amazonaws.com",
+          :from => ExchangeInformation.email_from_address,
+          :address => ExchangeInformation.smtp_host,
           :user_name => ExchangeInformation.email_username,
           :password => ExchangeInformation.email_password,
-          :domain => "dchbx.org",
+          :domain => ExchangeInformation.email_domain,
           :authentication => :plain,
           :port => "587"
         }

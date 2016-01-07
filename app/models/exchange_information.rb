@@ -18,7 +18,10 @@ class ExchangeInformation
     'invalid_argument_queue',
     'processing_failure_queue',
     'email_username',
-    'email_password'
+    'email_password',
+    'smtp_host',
+    'email_from_address',
+    'email_domain'
   ]
 
   attr_reader :config
