@@ -17,6 +17,7 @@ module Listeners
       subject = properties.headers['subject']
       recipient = properties.headers['recipient']
       format = properties.headers['format']
+      attachments = properties.headers['attachments']
       body = payload
       body_opts = case format
       when "html"
@@ -27,6 +28,7 @@ module Listeners
       Pony.mail({
         :to => recipient,
         :subject => subject,
+        :attachments => attachments,
         :via => :smtp,
         :via_options => {
           :to => recipient,
@@ -39,7 +41,7 @@ module Listeners
           :port => "587"
         }
       }.merge(body_opts).merge({
-         :from => "redmine@dchbx.org"
+         :from => ExchangeInformation.email_from_address
       }))
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
