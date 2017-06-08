@@ -15,7 +15,8 @@ gem 'rake'
 
 # Component requirements
 gem 'ohm', '2.0.1'
-gem 'haml'
+gem 'hiredis', '0.6.0'
+gem 'haml', '4.0.7'
 
 # Test requirements
 gem 'rspec', :group => 'test'
@@ -24,12 +25,13 @@ gem 'rack-test', :require => 'rack/test', :group => 'test'
 
 # Padrino Stable Gem
 gem 'padrino', '0.12.4'
-gem 'bunny'
+gem 'json', '1.8.3'
+gem 'bunny', '2.2.0'
 gem 'forkr', '0.1.7'
 gem 'activesupport', '4.1.8'
-gem 'nokogiri'
-gem 'virtus'
-gem 'pony'
+gem 'nokogiri', '1.6.6.2'
+gem 'virtus', '1.0.5'
+gem 'pony', '1.11'
 
 # Or Padrino Edge
 # gem 'padrino', :github => 'padrino/padrino-framework'
@@ -40,9 +42,9 @@ gem 'pony'
 # end
 
 group :production do
-  gem 'unicorn'
-#  gem 'bluepill', '0.0.68'
-  gem 'eye'
+  gem 'unicorn', '4.9.0'
+  gem 'eye', '0.7'
+  gem 'nio4r', '1.1.1'
 end
 
 group :development do
