@@ -20,6 +20,7 @@ class ExchangeInformation
     'email_username',
     'email_password',
     'smtp_host',
+    'smtp_port',
     'email_from_address',
     'email_domain'
   ]
