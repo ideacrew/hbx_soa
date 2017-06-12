@@ -39,7 +39,7 @@ module Listeners
           :port => "587"
         }
       }.merge(body_opts).merge({
-         :from => "redmine@dchbx.org"
+         :from => ExchangeInformation.email_from_address
       }))
       channel.acknowledge(delivery_info.delivery_tag, false)
     end
