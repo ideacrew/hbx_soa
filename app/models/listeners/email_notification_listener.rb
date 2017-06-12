@@ -36,7 +36,7 @@ module Listeners
           :password => ExchangeInformation.email_password,
           :domain => ExchangeInformation.email_domain,
           :authentication => :plain,
-          :port => "587"
+          :port => ExchangeInformation.smtp_port
         }
       }.merge(body_opts).merge({
          :from => ExchangeInformation.email_from_address
