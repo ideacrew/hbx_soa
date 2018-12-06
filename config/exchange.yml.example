@@ -1,0 +1,15 @@
+environment: "prod"
+hbx_id: "dc0"
+invalid_argument_queue: 'dc0.errors.invalid_arguements'
+processing_failure_queue: 'dc0.errors.processing_failures'
+event_exchange: "dc0.prod.e.topic.events"
+event_publish_exchange: "dc0.prod.e.fanout.events"
+request_exchange: "dc0.prod.e.direct.requests"
+amqp_uri: "amqp://guest:guest@127.0.0.1:5672"
+email_username: some_name
+email_password: some_password
+smtp_host: "host"
+email_from_address: "email"
+email_domain: "domain"
+smtp_host: "example_host"
+smtp_port: "example"
