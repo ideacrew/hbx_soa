@@ -8,9 +8,8 @@ class ExchangeSequence < Ohm::Model
     count_value = count || 1
     sequence = self.find(name: sequence_name).first
     return nil unless sequence
-    old_val = sequence.last_used.to_i
     new_val = sequence.incr_attribute(:last_used, count_value)
-    all_vals = ((old_val + 1)..new_val).to_a
+    all_vals = ((new_val - (count - 1))..new_val).to_a
     [sequence, all_vals]
   end
 
