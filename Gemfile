@@ -16,7 +16,7 @@ gem 'rake'
 # Component requirements
 gem 'ohm', '2.0.1'
 gem 'hiredis', '0.6.0'
-gem 'haml', '4.0.7'
+gem 'haml', '5.0.0'
 
 # Test requirements
 gem 'rspec', :group => 'test'
