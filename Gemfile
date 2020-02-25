@@ -29,7 +29,7 @@ gem 'json', '1.8.3'
 gem 'bunny', '2.2.0'
 gem 'forkr', '0.1.7'
 gem 'activesupport', '4.1.8'
-gem 'nokogiri', '1.6.6.2'
+gem 'nokogiri', '1.10.8'
 gem 'virtus', '1.0.5'
 gem 'pony', '1.11'
 
