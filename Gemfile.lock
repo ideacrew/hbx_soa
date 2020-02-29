@@ -114,7 +114,7 @@ GEM
     rack-test (0.6.3)
       rack (>= 1.0)
     raindrops (0.18.0)
-    rake (12.0.0)
+    rake (12.3.3)
     redic (1.5.0)
       hiredis
     rspec (3.6.0)
