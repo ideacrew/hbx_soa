@@ -20,7 +20,7 @@ gem 'haml', '4.0.7'
 
 # Test requirements
 gem 'rspec', :group => 'test'
-gem 'rack', '1.5.2'
+gem 'rack', '1.6.13'
 gem 'rack-test', :require => 'rack/test', :group => 'test'
 
 # Padrino Stable Gem
