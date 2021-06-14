@@ -1,1 +1,1 @@
-Forkr.new(Listeners::EnrollmentEventHandler, 3).run
+Forkr.new(Listeners::EnrollmentEventHandler, 2).run
